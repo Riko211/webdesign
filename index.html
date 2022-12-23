@@ -132,26 +132,34 @@
 
             </div>
         </div>
-        <div class="recall">
-            <h1>Відгуки</h1>
-            <div class="comment">
-                <p class="name"><span id="reviewerName1">Володимир</span></p>
-                <p class="name_text" id="reviewerBody1">“Сам не фахівець з квітів, але дружині дуже сподобався оригінальний весняний букет, зібраний із позитивним настроєм. Залишаю свій позитивний відгук магазину на вул. Добровольчих батальонів.”</p>
-            </div>
-            <br>
-            <div class="comment">
-                <p class="name"><span id="reviewerName2">Людмила</span></p>
-                <p class="name_text" id="reviewerBody2">
-                    “Замовляла квіти у неробочий час (увечері), але зі мною дуже оперативно зв'язався співробітник та пообіцяв доставити букет вранці у призначений час. Так і сталося, квіти були доставлені з точністю секунда в секунду, свіжі
-                    та красиві. Рекомендую.”
-                </p>
-            </div>
-            <br>
-            <p>Додати відгук:</p>
-            <input class="you_name" id="nameInput" type="text" placeholder="Ваше ім’я" name="" value="">
-            <textarea class="you_comment" id="reviewInput" type="text" rows="5" placeholder="Ваш відгук:"></textarea>
-            <input class="btn" type="button" name="" value="Відправити" onclick="AddCommentButton()">
+
+
+
+
+        <div id="comments" class="recall">
+            <!-- <h1>Відгуки</h1>
+    <div  class="comment">
+      <p class="name"><span>Володимир</span></p>
+      <p class="name_text">“Сам не фахівець з квітів, але дружині дуже сподобався оригінальний весняний букет, зібраний із позитивним настроєм. Залишаю свій позитивний відгук магазину на вул. Добровольчих батальонів.”</p>
+    </div>
+    <br>
+    <div class="comment">
+      <p class="name"><span>Людмила</span></p>
+      <p class="name_text">“Замовляла квіти у неробочий час (увечері), але зі мною дуже оперативно зв'язався співробітник та пообіцяв доставити букет вранці у призначений час. Так і сталося, квіти були доставлені з точністю секунда в секунду, свіжі
+        та красиві. Рекомендую.”</p>
+    <!- </div> -->
+            <!-- <br>
+    <p>Додати відгук:</p> -->
+            <input class="you_name" type="text" placeholder="Ваше ім’я" id="author" name="" value="">
+            <textarea class="you_comment" type="text" rows="5" id="text_comment" placeholder="Ваш відгук:"></textarea>
+            <input class="btn" type="button" name="" id="send_comment" onclick="sendComment ()" value="Відправити">
         </div>
+
+
+
+
+
+
         <div class="footer">
             <div class=" cld col">
                 <img src="images\logo.png" alt="logo">
@@ -199,7 +207,7 @@
             }
         });
 
-
+        /*
         fetch('https://jsonplaceholder.typicode.com/comments')
             .then(response => response.json())
             .then(json => {
@@ -215,7 +223,8 @@
                 document.getElementById("reviewerName2").innerHTML = name2;
                 document.getElementById("reviewerBody2").innerHTML = body2;
             });
-
+            */
+        /*
         function AddCommentButton() {
             fetch('https://jsonplaceholder.typicode.com/comments', {
                 method: 'POST',
@@ -231,9 +240,96 @@
                 .then(json => {
                     console.log('response: ' + JSON.stringify(json));
                 })
-
         }
+        */
+            function createParagraph(text, className, formatSelector = null){
+                const pName = document.createElement("p");
+                pName.className = className;
+                pName.innerHTML = formatSelector ? `<${formatSelector}>${text}</${formatSelector}>` : text;
+
+                return pName;
+            }
+
+            async function getComments() {
+                const response = await fetch("https://jsonplaceholder.typicode.com/comments");
+                return await response.json();
+                console(response);
+            }
+
+            function createComment(){
+                return fetch("https://jsonplaceholder.typicode.com/comments", {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        postId: Math.floor(Math.random() * 100),
+                        email: document.getElementById("author").value,
+                        body: document.getElementById("text_comment").value,
+                    }),
+                    headers: {
+                        'Content-type': 'application/json; charset=UTF-8',
+                    },
+                })
+                    .then((response) => response.json())
+                    .then((createdComment) => {
+
+                        const div = document.getElementById("comments");
+                        const addComment = document.getElementById("addComment");
+
+                        div.insertBefore(getCommentInDiv(createdComment), addComment);
+                        div.insertBefore(document.createElement("br"), addComment);
+                    });
+            }
+
+            function getCommentInDiv(comment){
+                const div = document.createElement("div");
+                div.className = "comment";
+
+                const author = createParagraph(comment.email, "name", "span");
+                const text = createParagraph(comment.body, "name_text");
+
+                div.appendChild(author);
+                div.appendChild(text);
+
+                return div;
+            }
+
+            async function divComments(){
+                const comments = await getComments();
+                const mainDiv = document.getElementById("comments");
+                const topComment = document.createElement("h1");
+
+                topComment.innerHTML = "Відгуки";
+
+                const elements = [topComment];
+                for (const comment of comments.slice(-2)) {
+                    elements.push(
+                        getCommentInDiv(comment),
+                        document.createElement("br")
+                    );
+                }
+
+                const downComment = document.createElement("p");
+                downComment.setAttribute("id", "addComment");
+                downComment.innerHTML = "Додати відгук:";
+
+                elements.push(downComment);
+
+                for (let i = elements.length - 1; i >= 0; i--) {
+                    mainDiv.prepend(elements[i]);
+                }
+            }
+
+            function sendComment(){
+                const button = document.getElementById("send_comment");
+                button.onclick = createComment;
+            }
+
+            window.onload = function () {
+                divComments();
+                sendComment();
+            }
+
     </script>
 
 </body>
 </html>
+
